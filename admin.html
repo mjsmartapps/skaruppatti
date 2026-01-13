@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Karuppatti Village</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2C1810', // Deep Earthy Brown
+                        secondary: '#D4AF37', // Metallic Gold
+                        accent: '#F5E6D3', // Warm Cream
+                        surface: '#FFFCF0', // Rice Paper White
+                        danger: '#ef4444',
+                    },
+                    fontFamily: {
+                        decorative: ['"Cinzel Decorative"', 'cursive'],
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Jost"', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'texture': "url('https://www.transparenttextures.com/patterns/natural-paper.png')"
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- GLOBAL STYLES --- */
+        body {
+            font-family: 'Jost', sans-serif;
+            background-color: #FFFCF0;
+            background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+            color: #2C1810;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F5E6D3; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 4px; }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 252, 240, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .glass-sidebar {
+            background: rgba(44, 24, 16, 0.95); /* Dark Glass for sidebar */
+            backdrop-filter: blur(10px);
+            border-right: 1px solid #D4AF37;
+        }
+
+        /* --- VILLAGE LOADER --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #FFFCF0, #F5E6D3);
+            z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease-out;
+        }
+        .village-scene { position: relative; width: 100px; height: 100px; margin-bottom: 20px; }
+        .sun {
+            width: 50px; height: 50px; background: #D4AF37; border-radius: 50%;
+            position: absolute; bottom: 10px; left: 25px;
+            box-shadow: 0 0 30px #D4AF37; animation: sunrise 2s ease-out forwards;
+        }
+        .palm-icon {
+            font-size: 70px; color: #2C1810; position: absolute; bottom: 0; left: 15px;
+            transform-origin: bottom center; animation: treeSway 3s ease-in-out infinite;
+        }
+        @keyframes sunrise { 0% { transform: translateY(50px) scale(0.5); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes treeSway { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #village-atmosphere { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+        .pollen {
+            position: absolute; background: #D4AF37; border-radius: 50%; opacity: 0.5;
+            filter: blur(1px); animation: floatUp 15s linear infinite;
+        }
+        @keyframes floatUp {
+            from { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            to { transform: translateY(-100px) translateX(50px); opacity: 0; }
+        }
+
+        /* Table & Row Styling */
+        .table-head { background: rgba(212, 175, 55, 0.1); color: #2C1810; font-family: 'Playfair Display', serif; }
+        .table-row { transition: all 0.2s; border-bottom: 1px solid rgba(212, 175, 55, 0.1); }
+        .table-row:hover { background: rgba(255, 255, 255, 0.6); transform: scale(1.005); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 5000; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: #2C1810; color: #F5E6D3; border-left: 4px solid #D4AF37; padding: 16px;
+            border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 12px;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <div id="village-atmosphere">
+        </div>
+
+    <div id="loader-overlay">
+        <div class="village-scene">
+            <div class="sun"></div>
+            <i class="fa-solid fa-tree palm-icon"></i>
+        </div>
+        <h1 class="font-decorative text-2xl text-primary tracking-widest font-bold mt-2">ADMIN ACCESS</h1>
+        <p class="font-serif text-secondary text-xs tracking-[0.2em] uppercase">Verifying Credentials</p>
+    </div>
+
+    <div id="auth-overlay" class="fixed inset-0 z-50 bg-primary/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel bg-surface p-10 rounded-3xl shadow-2xl text-center max-w-sm w-full border border-secondary/30 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary to-primary"></div>
+            
+            <h1 class="text-3xl font-bold font-decorative text-primary mb-2">Admin Panel</h1>
+            <p class="text-gray-500 mb-8 font-serif italic">Karuppatti Village Store</p>
+
+            <form onsubmit="handleEmailLogin(event)" class="space-y-5 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-primary/70 uppercase mb-1 tracking-wider">Email</label>
+                    <input type="email" id="login-email" required class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary focus:border-secondary outline-none transition bg-white/50" placeholder="admin@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-primary/70 uppercase mb-1 tracking-wider">Password</label>
+                    <input type="password" id="login-password" required class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary focus:border-secondary outline-none transition bg-white/50" placeholder="••••••••">
+                </div>
+                <button type="submit" id="email-login-btn" class="w-full bg-primary text-secondary py-3 rounded-xl font-bold hover:bg-secondary hover:text-primary transition shadow-lg tracking-widest text-xs uppercase border border-secondary/20">
+                    Login
+                </button>
+            </form>
+            
+            <p class="text-[10px] text-gray-400 mt-8 font-serif">Restricted Access. Authorized Personnel Only.</p>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <aside class="w-72 glass-sidebar text-accent shadow-2xl flex flex-col z-20 hidden md:flex">
+        <div class="h-24 flex flex-col items-center justify-center border-b border-secondary/20">
+            <h2 class="text-2xl font-bold font-decorative text-secondary tracking-wider">RS Admin</h2>
+            <span class="text-[10px] text-gray-400 font-serif tracking-[0.2em] uppercase mt-1">Village Dashboard</span>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 px-6 py-4 rounded-xl text-secondary bg-white/5 border border-secondary/20 transition font-medium">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+            </button>
+            <button onclick="switchTab('products')" id="nav-products" class="w-full flex items-center gap-4 px-6 py-4 rounded-xl text-gray-400 hover:bg-white/5 hover:text-secondary transition font-medium">
+                <i class="fa-solid fa-wheat-awn w-5"></i> Harvest
+            </button>
+            <button onclick="switchTab('orders')" id="nav-orders" class="w-full flex items-center gap-4 px-6 py-4 rounded-xl text-gray-400 hover:bg-white/5 hover:text-secondary transition font-medium">
+                <i class="fa-solid fa-boxes-packing w-5"></i> Orders
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-secondary/20 bg-black/20">
+            <div class="flex items-center gap-4 mb-6">
+                <img id="admin-avatar" src="" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=D4AF37&color=2C1810'" class="w-12 h-12 rounded-full border-2 border-secondary object-cover shadow-md">
+                <div class="overflow-hidden">
+                    <p id="admin-name" class="text-sm font-bold text-secondary truncate font-serif">Admin</p>
+                    <p class="text-xs text-gray-400">Manager</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full text-red-300 bg-red-900/20 py-3 rounded-xl text-xs font-bold hover:bg-red-900/40 transition border border-red-900/30 uppercase tracking-widest">
+                <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-primary z-30 flex items-center justify-between px-6 text-secondary shadow-md border-b border-secondary">
+        <span class="font-bold font-decorative text-lg">RS Admin</span>
+        <button onclick="toggleMobileMenu()" class="text-xl"><i class="fa-solid fa-bars-staggered"></i></button>
+    </div>
+
+    <div id="mobile-menu" class="fixed inset-0 bg-primary/95 backdrop-blur-xl z-40 hidden" onclick="toggleMobileMenu()">
+        <div class="absolute right-0 top-0 bottom-0 w-72 bg-surface p-6 border-l border-secondary" onclick="event.stopPropagation()">
+            <h3 class="font-decorative text-primary text-xl mb-8">Navigation</h3>
+            <nav class="space-y-4">
+                <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-accent text-primary font-bold">Dashboard</button>
+                <button onclick="switchTab('products'); toggleMobileMenu()" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-accent text-primary font-bold">Products</button>
+                <button onclick="switchTab('orders'); toggleMobileMenu()" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-accent text-primary font-bold">Orders</button>
+                <button onclick="logout()" class="block w-full text-left px-4 py-3 text-red-500 mt-8 border-t border-secondary/20 pt-4">Logout</button>
+            </nav>
+        </div>
+    </div>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden pt-16 md:pt-0 relative">
+        
+        <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 md:p-10 hide-scrollbar">
+            <h2 class="text-3xl font-bold text-primary mb-8 font-decorative">Overview</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                    <div class="absolute right-0 top-0 w-24 h-24 bg-secondary/10 rounded-full -mr-12 -mt-12 transition group-hover:bg-secondary/20"></div>
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Total Revenue</p>
+                            <h3 class="text-3xl font-bold text-primary font-serif" id="stat-revenue">₹0</h3>
+                        </div>
+                        <div class="p-3 bg-secondary/20 text-primary rounded-xl shadow-sm"><i class="fa-solid fa-coins text-xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Total Orders</p>
+                            <h3 class="text-3xl font-bold text-primary font-serif" id="stat-orders">0</h3>
+                        </div>
+                        <div class="p-3 bg-blue-50 text-blue-700 rounded-xl shadow-sm border border-blue-100"><i class="fa-solid fa-basket-shopping text-xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Products</p>
+                            <h3 class="text-3xl font-bold text-primary font-serif" id="stat-products">0</h3>
+                        </div>
+                        <div class="p-3 bg-green-50 text-green-700 rounded-xl shadow-sm border border-green-100"><i class="fa-solid fa-seedling text-xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Pending</p>
+                            <h3 class="text-3xl font-bold text-orange-600 font-serif" id="stat-pending">0</h3>
+                        </div>
+                        <div class="p-3 bg-orange-50 text-orange-600 rounded-xl shadow-sm border border-orange-100"><i class="fa-solid fa-hourglass-start text-xl"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="px-8 py-5 border-b border-secondary/20 flex justify-between items-center bg-secondary/5">
+                    <h3 class="font-bold text-primary font-serif text-lg">Recent Activities</h3>
+                    <button onclick="switchTab('orders')" class="text-xs text-secondary font-bold hover:text-primary uppercase tracking-wider transition">View All Orders</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="table-head text-xs uppercase">
+                            <tr>
+                                <th class="px-8 py-4 font-semibold">Order ID</th>
+                                <th class="px-8 py-4 font-semibold">Customer</th>
+                                <th class="px-8 py-4 font-semibold">Amount</th>
+                                <th class="px-8 py-4 font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-orders-table" class="text-sm divide-y divide-secondary/10"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-products" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            <div class="p-6 md:px-10 md:pt-10 flex justify-between items-center glass-panel m-6 mb-0 rounded-2xl">
+                <h2 class="text-2xl font-bold text-primary font-decorative">Harvest Inventory</h2>
+                <button onclick="openProductModal()" class="bg-primary text-secondary px-6 py-3 rounded-xl text-xs font-bold shadow-lg hover:bg-secondary hover:text-primary transition uppercase tracking-wider border border-secondary">
+                    <i class="fa-solid fa-plus mr-2"></i> Add Item
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-auto p-6 md:px-10 pb-10 hide-scrollbar">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="products-grid"></div>
+            </div>
+        </div>
+
+        <div id="view-orders" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            <div class="p-6 md:px-10 md:pt-10">
+                <h2 class="text-2xl font-bold text-primary font-decorative">Order Management</h2>
+            </div>
+            
+            <div class="flex-1 overflow-auto px-6 md:px-10 pb-10 hide-scrollbar">
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="table-head text-xs uppercase sticky top-0 bg-accent z-10">
+                                <tr>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Customer</th>
+                                    <th class="px-6 py-4">Items</th>
+                                    <th class="px-6 py-4">Total</th>
+                                    <th class="px-6 py-4">Address</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-full-table" class="text-sm divide-y divide-secondary/10"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="product-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-primary/80 backdrop-blur-sm transition-opacity" onclick="closeProductModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
+            <div class="glass-panel bg-surface rounded-3xl p-8 relative max-h-[90vh] overflow-y-auto shadow-2xl border border-secondary">
+                <button onclick="closeProductModal()" class="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                
+                <h2 class="text-2xl font-bold text-primary mb-6 font-serif border-b border-secondary/20 pb-2" id="modal-title">Add Inventory</h2>
+                
+                <form onsubmit="handleProductSubmit(event)" class="space-y-5">
+                    <input type="hidden" id="prod-id">
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Item Name</label>
+                        <input type="text" id="prod-name" required class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50">
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Price (₹)</label>
+                            <input type="number" id="prod-price" required min="1" class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Unit</label>
+                            <input type="text" id="prod-unit" required class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50" placeholder="e.g. 500g">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Stock Qty</label>
+                            <input type="number" id="prod-stock" required min="0" class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Category</label>
+                            <select id="prod-category" class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50">
+                                <option>Karuppatti</option>
+                                <option>Millets</option>
+                                <option>Dry Fruits</option>
+                                <option>Spices</option>
+                                <option>Oils</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Image URL</label>
+                        <input type="url" id="prod-image" class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50" placeholder="https://...">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-primary/70 uppercase mb-1 tracking-wider">Description</label>
+                        <textarea id="prod-desc" rows="3" class="w-full px-4 py-3 border border-secondary/30 rounded-xl text-sm focus:ring-1 focus:ring-secondary outline-none bg-white/50"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-secondary py-3 rounded-xl font-bold hover:bg-secondary hover:text-primary transition mt-2 shadow-lg uppercase tracking-widest text-xs border border-secondary">
+                        Save Item
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, set, push, update, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCu_WUd66NRLa_8uI06UXVTlkDh74dMBqU",
+            authDomain: "vasanth-ee54c.firebaseapp.com",
+            databaseURL: "https://vasanth-ee54c-default-rtdb.firebaseio.com",
+            projectId: "vasanth-ee54c",
+            storageBucket: "vasanth-ee54c.firebasestorage.app",
+            messagingSenderId: "668556425496",
+            appId: "1:668556425496:web:1b3aab6bf95a5baa19c66d",
+            measurementId: "G-8R23976J89",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // --- ANIMATIONS ---
+        const villageAtmosphere = document.getElementById('village-atmosphere');
+        for(let i=0; i<15; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'pollen';
+            const size = Math.random() * 4 + 1;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}vw`;
+            particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+            particle.style.animationDelay = `${Math.random() * 10}s`;
+            villageAtmosphere.appendChild(particle);
+        }
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            const icon = type === 'success' ? '<i class="fa-solid fa-leaf text-secondary text-xl"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-400 text-xl"></i>';
+            toast.innerHTML = `${icon} <span class="font-medium text-sm tracking-wide">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 400); }, 3000);
+        };
+
+        window.handleEmailLogin = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('email-login-btn');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...'; btn.disabled = true;
+            try { await signInWithEmailAndPassword(auth, email, password); } 
+            catch (error) { console.error(error); window.showToast("Access Denied", "error"); btn.innerText = originalText; btn.disabled = false; }
+        };
+
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, async (user) => {
+            const authOverlay = document.getElementById('auth-overlay');
+            const btn = document.getElementById('email-login-btn');
+            const loader = document.getElementById('loader-overlay');
+
+            if (user) {
+                try {
+                    const userRef = ref(db, `users/${user.uid}`);
+                    const snapshot = await get(userRef);
+                    if (snapshot.exists() && snapshot.val().role === 'admin') {
+                        authOverlay.classList.add('hidden');
+                        const avatar = document.getElementById('admin-avatar');
+                        if(user.photoURL) { avatar.src = user.photoURL; } else { avatar.src = `https://ui-avatars.com/api/?name=${user.email}&background=D4AF37&color=2C1810`; }
+                        document.getElementById('admin-name').innerText = user.displayName || user.email.split('@')[0];
+                        initDashboard();
+                        setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 800); }, 1500);
+                    } else { await signOut(auth); window.showToast("Unauthorized Access", "error"); authOverlay.classList.remove('hidden'); loader.style.display='none'; if(btn) { btn.innerText = 'Login'; btn.disabled = false; } }
+                } catch (error) { console.error(error); await signOut(auth); window.showToast("DB Connection Failed", "error"); authOverlay.classList.remove('hidden'); loader.style.display='none'; if(btn) { btn.innerText = 'Login'; btn.disabled = false; } }
+            } else { authOverlay.classList.remove('hidden'); loader.style.display='none'; if(btn) { btn.innerText = 'Login'; btn.disabled = false; } }
+        });
+
+        window.switchTab = (tabId) => {
+            ['dashboard', 'products', 'orders'].forEach(t => {
+                const btn = document.getElementById(`nav-${t}`);
+                if(t === tabId) { btn.className = "w-full flex items-center gap-4 px-6 py-4 rounded-xl text-secondary bg-white/10 border border-secondary/20 transition font-medium"; } 
+                else { btn.className = "w-full flex items-center gap-4 px-6 py-4 rounded-xl text-gray-400 hover:bg-white/5 hover:text-secondary transition font-medium"; }
+                const view = document.getElementById(`view-${t}`);
+                if(t === tabId) view.classList.remove('hidden'); else view.classList.add('hidden');
+            });
+        };
+
+        window.toggleMobileMenu = () => { document.getElementById('mobile-menu').classList.toggle('hidden'); };
+
+        let allOrders = []; let allProducts = {};
+
+        function initDashboard() {
+            onValue(ref(db, 'products'), (snapshot) => { allProducts = snapshot.val() || {}; renderProducts(); updateStats(); });
+            onValue(ref(db, 'orders'), (snapshot) => {
+                const data = snapshot.val();
+                if(data) { allOrders = Object.entries(data).map(([key, val]) => ({...val, id: key})).sort((a,b) => b.orderDate - a.orderDate); renderOrders(); updateStats(); } 
+                else { allOrders = []; renderOrders(); }
+            });
+        }
+
+        function updateStats() {
+            let revenue = 0; let pending = 0;
+            allOrders.forEach(o => {
+                const amt = parseFloat(o.totalAmount.toString().replace(/[^0-9.]/g, '')) || 0;
+                if(o.status !== 'Cancelled') revenue += amt;
+                if(o.status === 'Pending' || !o.status) pending++;
+            });
+            document.getElementById('stat-revenue').innerText = "₹" + revenue.toLocaleString();
+            document.getElementById('stat-orders').innerText = allOrders.length;
+            document.getElementById('stat-products').innerText = Object.keys(allProducts).length;
+            document.getElementById('stat-pending').innerText = pending;
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            Object.entries(allProducts).forEach(([id, prod]) => {
+                const stockColor = prod.stock > 10 ? 'bg-green-100 text-green-700' : (prod.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
+                grid.innerHTML += `
+                    <div class="glass-panel rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-1 transition duration-300">
+                        <div class="h-40 relative overflow-hidden bg-white/50">
+                            <img src="${prod.image}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+                            <div class="absolute top-2 right-2 px-2 py-1 rounded text-[10px] font-bold ${stockColor}">Stock: ${prod.stock}</div>
+                        </div>
+                        <div class="p-5 flex flex-col flex-1">
+                            <h3 class="font-bold text-primary line-clamp-1 font-serif text-lg">${prod.name}</h3>
+                            <p class="text-xs text-gray-500 mb-3 font-serif italic">${prod.category} • ${prod.unit || ''}</p>
+                            <div class="mt-auto flex justify-between items-center">
+                                <span class="font-bold text-lg text-primary">₹${prod.price}</span>
+                                <div class="flex gap-2">
+                                    <button onclick="editProduct('${id}')" class="w-8 h-8 rounded-full bg-accent hover:bg-secondary hover:text-white transition flex items-center justify-center text-primary shadow-sm"><i class="fa-solid fa-pen text-xs"></i></button>
+                                    <button onclick="deleteProduct('${id}')" class="w-8 h-8 rounded-full bg-red-50 hover:bg-red-500 hover:text-white transition flex items-center justify-center text-red-500 shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        window.openProductModal = (isEdit = false) => {
+            const modal = document.getElementById('product-modal');
+            modal.classList.remove('hidden');
+            if(!isEdit) { document.getElementById('modal-title').innerText = "Add New Inventory"; document.getElementById('prod-id').value = ""; document.querySelector('form').reset(); }
+        };
+
+        window.closeProductModal = () => document.getElementById('product-modal').classList.add('hidden');
+
+        window.editProduct = (id) => {
+            const prod = allProducts[id];
+            if(!prod) return;
+            document.getElementById('modal-title').innerText = "Update Details";
+            document.getElementById('prod-id').value = id;
+            document.getElementById('prod-name').value = prod.name;
+            document.getElementById('prod-price').value = prod.price;
+            document.getElementById('prod-unit').value = prod.unit || prod.weight || '';
+            document.getElementById('prod-stock').value = prod.stock;
+            document.getElementById('prod-category').value = prod.category || 'Karuppatti';
+            document.getElementById('prod-image').value = prod.image || '';
+            document.getElementById('prod-desc').value = prod.description || '';
+            window.openProductModal(true);
+        };
+
+        window.handleProductSubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value;
+            const data = { name: document.getElementById('prod-name').value, price: Number(document.getElementById('prod-price').value), unit: document.getElementById('prod-unit').value, stock: Number(document.getElementById('prod-stock').value), category: document.getElementById('prod-category').value, image: document.getElementById('prod-image').value, description: document.getElementById('prod-desc').value };
+            try {
+                if(id) { await update(ref(db, `products/${id}`), data); window.showToast("Inventory Updated"); } 
+                else { await push(ref(db, 'products'), data); window.showToast("Inventory Added"); }
+                window.closeProductModal();
+            } catch (err) { console.error(err); window.showToast("Error saving", "error"); }
+        };
+
+        window.deleteProduct = async (id) => { if(confirm("Delete this item permanently?")) { await remove(ref(db, `products/${id}`)); window.showToast("Item Deleted"); } };
+
+        function renderOrders() {
+            const dashboardTable = document.getElementById('dashboard-orders-table');
+            const fullTable = document.getElementById('orders-full-table');
+            dashboardTable.innerHTML = ''; fullTable.innerHTML = '';
+            
+            allOrders.slice(0, 5).forEach(order => {
+                dashboardTable.innerHTML += `
+                    <tr class="table-row">
+                        <td class="px-8 py-4 font-medium text-primary">#${order.id.slice(-5).toUpperCase()}</td>
+                        <td class="px-8 py-4 text-gray-600">${order.customerName}</td>
+                        <td class="px-8 py-4 font-bold text-primary font-serif">${order.totalAmount}</td>
+                        <td class="px-8 py-4"><span class="text-[10px] font-bold px-2 py-1 rounded border ${getStatusColor(order.status)}">${order.status || 'Pending'}</span></td>
+                    </tr>`;
+            });
+
+            allOrders.forEach(order => {
+                const date = new Date(order.orderDate).toLocaleDateString();
+                const itemsList = order.items.map(i => `<div class="text-xs text-gray-500">${i.name} (${i.qty})</div>`).join('');
+                fullTable.innerHTML += `
+                    <tr class="table-row">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 font-serif">${date}</td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-bold text-primary">${order.customerName}</div>
+                            <div class="text-xs text-gray-400">${order.customerPhone}</div>
+                        </td>
+                        <td class="px-6 py-4">${itemsList}</td>
+                        <td class="px-6 py-4 font-bold text-secondary font-serif">${order.totalAmount}</td>
+                        <td class="px-6 py-4 max-w-xs">
+                            <p class="text-xs text-gray-600 truncate" title="${order.address}">${order.address}</p>
+                            ${order.address.includes('GPS') ? '<a href="https://www.google.com/maps?q=' + extractGPS(order.address) + '" target="_blank" class="text-[10px] text-secondary hover:underline"><i class="fa-solid fa-location-arrow"></i> Map</a>' : ''}
+                        </td>
+                        <td class="px-6 py-4">
+                            <select onchange="updateStatus('${order.id}', this.value)" class="bg-white/50 border border-secondary/20 text-xs rounded px-2 py-1 focus:outline-none focus:border-primary ${getStatusColor(order.status)}">
+                                <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                                <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                             <a href="tel:${order.customerPhone}" class="text-primary/50 hover:text-secondary mx-1"><i class="fa-solid fa-phone"></i></a>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Pending': return 'text-orange-700 bg-orange-50 border-orange-200';
+                case 'Processing': return 'text-blue-700 bg-blue-50 border-blue-200';
+                case 'Shipped': return 'text-purple-700 bg-purple-50 border-purple-200';
+                case 'Delivered': return 'text-green-700 bg-green-50 border-green-200';
+                case 'Cancelled': return 'text-red-700 bg-red-50 border-red-200';
+                default: return 'text-gray-600 bg-gray-50 border-gray-200';
+            }
+        }
+
+        function extractGPS(addr) { if(!addr.includes('GPS:')) return ''; return addr.split('GPS:')[1].replace(']', '').trim(); }
+        window.updateStatus = async (orderId, newStatus) => { try { await update(ref(db, `orders/${orderId}`), { status: newStatus }); window.showToast(`Updated to ${newStatus}`); } catch (e) { console.error(e); window.showToast("Failed", "error"); } };
+        window.editProduct = editProduct; window.deleteProduct = deleteProduct;
+    </script>
+</body>
+</html>
