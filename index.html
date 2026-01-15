@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S Karuppatti Store</title>
+    
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&family=Mukta+Malar:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="index.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3f2305', // Deep Jaggery Brown
+                        secondary: '#d97706', // Warm Amber/Copper
+                        accent: '#fffbeb', // Cream/Beige
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        tamil: ['"Mukta Malar"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-gray-800 flex flex-col min-h-screen">
+
+    <div id="loader-overlay">
+        <div class="flex flex-col items-center">
+            <div class="spinner mb-4"></div>
+            <p class="text-primary font-serif tracking-widest text-sm font-bold">LOADING S KARUPPATTI STORE</p>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <header class="fixed top-0 left-0 right-0 bg-primary text-white shadow-lg z-40 h-16 will-change-transform">
+        <div class="container mx-auto px-4 h-full flex items-center justify-between">
+            
+            <div class="flex items-center gap-4 w-1/4">
+                <button onclick="toggleDrawer(true)" class="text-xl hover:text-secondary transition p-2">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="relative cursor-pointer hover:text-secondary transition" onclick="openCartModal()">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span id="cart-badge" class="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+                </div>
+            </div>
+
+            <div class="w-2/4 text-center">
+                <h1 class="text-sm md:text-lg font-bold tracking-wider truncate text-secondary uppercase">S Karuppatti Store</h1>
+            </div>
+
+            <div class="w-1/4 flex justify-end relative">
+                <button id="login-btn-header" onclick="toggleModal('login-modal', true)" class="bg-secondary text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-white hover:text-primary transition shadow-md">
+                    Login
+                </button>
+                
+                <div id="user-profile-header" class="hidden flex items-center gap-3 cursor-pointer" onclick="toggleUserMenu()">
+                    <span id="user-name-display" class="hidden md:block text-sm text-gray-200">User</span>
+                    <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-white font-bold">
+                        <img id="user-avatar" src="" onerror="this.style.display='none'" class="w-full h-full rounded-full hidden">
+                        <i id="user-icon-default" class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+
+                <div id="user-menu-dropdown" class="absolute top-12 right-0 bg-white text-gray-800 shadow-xl rounded-lg w-48 py-2 hidden">
+                    <a href="#" id="nav-profile-link" onclick="openProfileModal(); toggleUserMenu()" class="hidden px-4 py-2 hover:bg-gray-100"><i class="fa-solid fa-id-card mr-2"></i> Profile</a>
+                    <a href="#" id="nav-orders-link" onclick="openOrdersModal(); toggleUserMenu()" class="hidden px-4 py-2 hover:bg-gray-100"><i class="fa-solid fa-box-open mr-2"></i> My Orders</a>
+                    
+                    <div id="nav-divider" class="hidden border-t my-1"></div>
+                    <a href="#" onclick="logoutUser(); toggleUserMenu()" class="block px-4 py-2 text-red-600 hover:bg-gray-100"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="drawer-overlay" onclick="toggleDrawer(false)" class="fixed inset-0 bg-black bg-opacity-50 z-[60] hidden transition-opacity"></div>
+    <aside id="drawer" class="fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-[65] transform -translate-x-full pt-20">
+        <button onclick="toggleDrawer(false)" class="absolute top-4 right-4 text-gray-500 hover:text-red-500">
+            <i class="fa-solid fa-xmark text-2xl"></i>
+        </button>
+        
+        <div class="px-6 pb-6 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-primary brand-font">Menu</h2>
+        </div>
+
+        <nav class="p-4 space-y-2">
+            <a href="#home" class="flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-accent hover:text-primary rounded-lg transition" onclick="toggleDrawer(false)">
+                <i class="fa-solid fa-house w-6 text-center"></i> Home
+            </a>
+            <a href="#products" class="flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-accent hover:text-primary rounded-lg transition" onclick="toggleDrawer(false)">
+                <i class="fa-solid fa-leaf w-6 text-center"></i> Products
+            </a>
+            <a href="#" onclick="openCartModal(); toggleDrawer(false);" class="flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-accent hover:text-primary rounded-lg transition">
+                <i class="fa-solid fa-cart-shopping w-6 text-center"></i> Cart
+            </a>
+            <div id="drawer-user-links" class="hidden border-t pt-2 mt-2">
+                <a href="#" id="drawer-profile-link" onclick="openProfileModal(); toggleDrawer(false);" class="hidden items-center gap-4 px-4 py-3 text-gray-700 hover:bg-accent hover:text-primary rounded-lg transition">
+                    <i class="fa-solid fa-id-card w-6 text-center"></i> My Profile
+                </a>
+                <a href="#" id="drawer-orders-link" onclick="openOrdersModal(); toggleDrawer(false);" class="hidden items-center gap-4 px-4 py-3 text-gray-700 hover:bg-accent hover:text-primary rounded-lg transition">
+                    <i class="fa-solid fa-box-open w-6 text-center"></i> My Orders
+                </a>
+            </div>
+        </nav>
+
+        <div class="absolute bottom-0 w-full p-4 border-t bg-gray-50">
+            <p class="text-xs text-center text-gray-400">© 2023 S Karuppatti Store</p>
+        </div>
+    </aside>
+
+    <main class="pt-20 pb-10 px-4 max-w-7xl mx-auto flex-grow w-full">
+        
+        <section id="home" class="mb-12 rounded-2xl overflow-hidden shadow-xl relative h-64 md:h-80 bg-gray-900">
+            <img src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?q=80&w=2070&auto=format&fit=crop" alt="Palm Jaggery" class="w-full h-full object-cover opacity-60" loading="eager">
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-2 brand-font">Authentic Palm Jaggery</h2>
+                <p class="text-secondary text-lg font-medium">Pure Karuppatti, Traditional Sweets & Naturals</p>
+                <button onclick="document.getElementById('products').scrollIntoView({behavior: 'smooth'})" class="mt-6 bg-secondary text-white px-6 py-2 rounded-full font-bold hover:bg-white hover:text-primary transition">Shop Now</button>
+            </div>
+        </section>
+
+        <div id="products">
+            <div class="flex justify-between items-end mb-6 border-b-2 border-secondary pb-1">
+                <h3 class="text-2xl font-bold text-primary brand-font">Our Products</h3>
+                <button onclick="window.location.reload()" class="text-xs text-gray-500 hover:text-primary"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+            
+            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 min-h-[200px]">
+                <div class="col-span-2 md:col-span-4 flex justify-center items-center h-40">
+                    <div class="spinner border-primary"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-primary text-white pt-10 pb-6 mt-auto content-visibility-auto">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                <div>
+                    <h3 class="text-xl font-bold brand-font text-secondary mb-4">S Karuppatti Store</h3>
+                    <p class="text-gray-300 text-sm leading-relaxed">
+                        Specializing in authentic Palm Jaggery (Karuppatti), organic millets, and traditional healthy sweets straight from nature to your home.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-lg mb-4 text-secondary">Quick Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><a href="#" onclick="toggleModal('about-modal', true)" class="hover:text-secondary transition">About Us</a></li>
+                        <li><a href="#" onclick="toggleModal('terms-modal', true)" class="hover:text-secondary transition">Terms & Conditions</a></li>
+                        <li><a href="#" onclick="toggleModal('privacy-modal', true)" class="hover:text-secondary transition">Privacy Policy</a></li>
+                        <li><a href="admin.html" class="hover:text-secondary transition">Admin</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-lg mb-4 text-secondary">Contact Us</h4>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-phone text-secondary"></i> 
+                            <span>+91 98765 43210</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-envelope text-secondary"></i> 
+                            <span class="break-words">support@skaruppatti.com</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-location-dot text-secondary mt-1"></i> 
+                            <span>123, Bazaar Street,<br>Tamil Nadu, India</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-lg mb-4 text-secondary">Follow Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-white bg-opacity-10 flex items-center justify-center hover:bg-secondary hover:text-white transition">
+                            <i class="fa-brands fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-white bg-opacity-10 flex items-center justify-center hover:bg-secondary hover:text-white transition">
+                            <i class="fa-brands fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-white bg-opacity-10 flex items-center justify-center hover:bg-secondary hover:text-white transition">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-700 mt-10 pt-6 text-center text-xs text-gray-400">
+                <p>Designed by : <a href="https://www.mjsmartapps.xyz" target="_blank" class="text-secondary hover:text-white transition font-bold">MJ SMART APPS</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="sticky-cart-footer" class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-[60] transform translate-y-full transition-transform duration-300 hidden will-change-transform">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total</span>
+                <div class="flex items-baseline gap-2">
+                    <span id="sticky-cart-total" class="text-xl font-bold text-primary brand-font">₹0</span>
+                    <span id="sticky-cart-count" class="text-xs text-gray-400 font-medium">0 Items</span>
+                </div>
+            </div>
+            <button onclick="openCartModal()" class="bg-secondary text-white px-6 py-2 rounded-full font-bold hover:bg-yellow-600 transition shadow-md flex items-center gap-2 animate-bounce-slight">
+                <span>View Cart</span>
+                <i class="fa-solid fa-cart-shopping"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="product-detail-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('product-detail-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl p-4">
+            <div class="glass rounded-2xl shadow-2xl overflow-hidden relative max-h-[95vh] flex flex-col md:flex-row bg-white pb-16 md:pb-0">
+                <button onclick="toggleModal('product-detail-modal', false)" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <div class="w-full md:w-1/2 bg-gray-50 flex flex-col">
+                    <div class="flex-1 relative h-64 md:h-auto overflow-hidden flex items-center justify-center bg-gray-100">
+                        <img id="detail-main-img" src="" class="max-w-full max-h-full object-contain p-4" loading="eager">
+                    </div>
+                    <div class="h-20 bg-white border-t p-2 flex gap-2 overflow-x-auto" id="detail-thumbnails"></div>
+                </div>
+                <div class="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto max-h-[50vh] md:max-h-full flex flex-col">
+                    <div class="flex-1">
+                        <span id="detail-category" class="text-xs font-bold text-secondary uppercase tracking-wider mb-2 block">Category</span>
+                        <h2 id="detail-name-eng" class="text-2xl md:text-3xl font-bold text-primary brand-font mb-1">Product Name</h2>
+                        <h3 id="detail-name-tam" class="text-lg text-gray-600 tamil-font mb-4">தயாரிப்பு பெயர்</h3>
+                        <div class="flex items-end gap-3 mb-6">
+                            <span id="detail-price-old" class="text-sm text-gray-400 line-through mb-1"></span>
+                            <span id="detail-price-new" class="text-3xl font-bold text-secondary">₹0</span>
+                            <span id="detail-unit" class="text-sm text-gray-500 font-medium mb-1">/ unit</span>
+                        </div>
+                        <div class="bg-accent/50 p-4 rounded-xl border border-primary/10 mb-6">
+                            <h4 class="font-bold text-sm text-primary mb-2">Description</h4>
+                            <p id="detail-desc" class="text-sm text-gray-600 leading-relaxed">No description available.</p>
+                        </div>
+                        <div class="mb-6">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Availability:</span>
+                            <span id="detail-stock" class="text-sm font-bold text-green-600 ml-2">In Stock</span>
+                        </div>
+                    </div>
+                    <div id="detail-btn-container" class="mt-auto pt-4 border-t border-gray-100 w-full"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('profile-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4">
+            <div class="glass rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto hide-scrollbar">
+                <button onclick="toggleModal('profile-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="flex flex-col items-center mb-6">
+                    <div class="w-20 h-20 bg-primary text-secondary rounded-full flex items-center justify-center text-4xl mb-3 overflow-hidden">
+                        <img id="profile-modal-img" src="" onerror="this.style.display='none'" class="w-full h-full object-cover hidden">
+                        <i id="profile-modal-icon" class="fa-solid fa-user text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-primary brand-font" id="profile-display-name">User Name</h2>
+                    <p class="text-gray-500 text-sm" id="profile-display-email">email@example.com</p>
+                </div>
+                <div id="profile-view-mode" class="space-y-4">
+                    <div class="bg-gray-50 p-3 rounded-lg border">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Phone</label>
+                        <p id="profile-display-phone" class="font-medium text-sm">Not Set</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Address</label>
+                        <p id="profile-display-address" class="text-sm">Not Set</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="bg-gray-50 p-3 rounded-lg border w-1/2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Pincode</label>
+                            <p id="profile-display-pincode" class="font-medium text-sm">Not Set</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border w-1/2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">State</label>
+                            <p id="profile-display-state" class="font-medium text-sm">Not Set</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Current Location</label>
+                        <p id="profile-display-location" class="text-xs text-gray-600 break-all">Not Set</p>
+                    </div>
+                    <button onclick="toggleProfileEdit(true)" class="w-full bg-secondary text-white py-2 rounded-lg font-bold hover:bg-yellow-600 transition mt-2">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+                    </button>
+                    <button onclick="logoutUser()" class="w-full mt-2 border border-red-500 text-red-500 py-2 rounded-lg font-bold hover:bg-red-50 transition">
+                        Logout
+                    </button>
+                </div>
+                <form id="profile-edit-mode" onsubmit="saveUserProfile(event)" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Name</label>
+                        <input type="text" id="edit-profile-name" required class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Phone (10 Digit)</label>
+                        <input type="tel" id="edit-profile-phone" required pattern="\d{10}" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Address</label>
+                        <textarea id="edit-profile-address" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary outline-none text-sm"></textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-1/2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Pincode</label>
+                            <input type="tel" id="edit-profile-pincode" required pattern="\d{6}" maxlength="6" oninput="handlePincodeInput(this, 'edit-profile-state')" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none bg-white" placeholder="600001">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">State</label>
+                            <input type="text" id="edit-profile-state" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-sm focus:outline-none text-gray-600" placeholder="Auto-filled">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Current Location</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="edit-profile-location" readonly class="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-xs focus:outline-none" placeholder="Coordinates">
+                            <button type="button" onclick="getProfileLocation()" class="bg-secondary text-white text-[10px] font-bold px-3 rounded hover:bg-yellow-600 transition whitespace-nowrap">
+                                Get
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-4">
+                        <button type="button" onclick="toggleProfileEdit(false)" class="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg font-bold hover:bg-gray-50 transition">Cancel</button>
+                        <button type="submit" class="flex-1 bg-primary text-white py-2 rounded-lg font-bold hover:bg-emerald-900 transition">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="about-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('about-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
+            <div class="glass rounded-2xl shadow-2xl p-6 relative max-h-[80vh] overflow-y-auto">
+                <button onclick="toggleModal('about-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 class="text-2xl font-bold text-primary mb-4 brand-font">About Us</h2>
+                <div class="text-sm text-gray-600 space-y-3">
+                    <p>Welcome to S Karuppatti Store, your trusted source for authentic Palm Jaggery and traditional health foods. We are dedicated to reviving the traditional tastes of Tamil Nadu with a focus on purity, organic sourcing, and health benefits.</p>
+                    <p>Founded in 2023, S Karuppatti Store began with a simple mission: to replace refined sugar with healthy, natural alternatives. We source our Karuppatti directly from farmers who use traditional extraction methods.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="terms-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('terms-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
+            <div class="glass rounded-2xl shadow-2xl p-6 relative max-h-[80vh] overflow-y-auto">
+                <button onclick="toggleModal('terms-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 class="text-2xl font-bold text-primary mb-4 brand-font">Terms & Conditions</h2>
+                <div class="text-sm text-gray-600 space-y-3">
+                    <p><strong>1. Introduction</strong><br>By using our website, you agree to be bound by these terms and conditions.</p>
+                    <p><strong>2. Ordering</strong><br>All orders are subject to availability and confirmation of the order price.</p>
+                    <p><strong>3. Pricing</strong><br>While we try and ensure that all details, descriptions and prices which appear on this Website are accurate, errors may occur.</p>
+                    <p><strong>4. Delivery</strong><br>We aim to deliver items within the specified timeframes, but delays may occur.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacy-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('privacy-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
+            <div class="glass rounded-2xl shadow-2xl p-6 relative max-h-[80vh] overflow-y-auto">
+                <button onclick="toggleModal('privacy-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 class="text-2xl font-bold text-primary mb-4 brand-font">Privacy Policy</h2>
+                <div class="text-sm text-gray-600 space-y-3">
+                    <p>Your privacy is important to us. It is S Karuppatti Store's policy to respect your privacy regarding any information we may collect from you across our website.</p>
+                    <p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent.</p>
+                    <p>We don't share any personally identifying information publicly or with third-parties, except when required to by law.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-modal" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('cart-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4">
+            <div class="glass rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto hide-scrollbar flex flex-col md:flex-row gap-6">
+                <button onclick="toggleModal('cart-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-gray-200 pr-0 md:pr-4">
+                    <h2 class="text-xl font-bold text-primary mb-4 brand-font">Your Cart</h2>
+                    <div id="cart-items-container" class="space-y-4 mb-4">
+                        <p class="text-gray-500 text-center py-4">Your cart is empty.</p>
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t border-gray-300">
+                        <span class="font-bold text-gray-700">Total</span>
+                        <span id="cart-total-price" class="text-xl font-bold text-primary">₹0</span>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h2 class="text-xl font-bold text-primary mb-4 brand-font">Shipping Details</h2>
+                    <form onsubmit="handlePlaceOrder(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Name</label>
+                            <input type="text" id="checkout-name" required class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none bg-white" placeholder="Full Name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Phone (10 Digit Only)</label>
+                            <input type="tel" id="checkout-phone" required pattern="\d{10}" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none" placeholder="9876543210">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Email</label>
+                            <input type="email" id="checkout-email" required class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none bg-white" placeholder="email@example.com">
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="w-1/2">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">Pincode (6 Digit)</label>
+                                <input type="tel" id="checkout-pincode" required pattern="\d{6}" maxlength="6" oninput="handlePincodeInput(this, 'checkout-state')" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary text-sm outline-none bg-white" placeholder="600001">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">State</label>
+                                <input type="text" id="checkout-state" required readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-sm focus:outline-none text-gray-600" placeholder="Auto-filled">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Address</label>
+                            <textarea id="checkout-address" required rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary outline-none text-sm" placeholder="Door No, Street Name, Area..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Current Location</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="checkout-location" readonly class="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-xs focus:outline-none" placeholder="GPS Coordinates will appear here">
+                                <button type="button" onclick="getCheckoutLocation()" class="bg-secondary text-white text-[10px] font-bold px-3 rounded hover:bg-yellow-600 transition whitespace-nowrap">
+                                    <i class="fa-solid fa-location-crosshairs"></i> Get Location
+                                </button>
+                            </div>
+                        </div>
+                        <div id="order-loader" class="hidden flex justify-center py-2">
+                            <div class="spinner-sm"></div>
+                        </div>
+                        <button type="submit" id="place-order-btn" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold hover:bg-emerald-900 transition shadow-lg mt-2">
+                            Confirm Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="orders-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('orders-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4">
+            <div class="glass rounded-2xl shadow-2xl p-6 relative max-h-[85vh] overflow-y-auto hide-scrollbar">
+                <button onclick="toggleModal('orders-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 class="text-2xl font-bold text-primary mb-6 brand-font border-b pb-2">My Order History</h2>
+                <div id="orders-list-container" class="space-y-4">
+                    <div class="flex justify-center py-8">
+                        <div class="spinner border-primary"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="toggleModal('login-modal', false)"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4">
+            <div class="glass rounded-2xl shadow-2xl p-8 relative overflow-hidden">
+                <div id="login-process-loader" class="modal-loader hidden">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="spinner border-primary"></div>
+                        <p class="text-sm font-bold text-gray-600">Signing in...</p>
+                    </div>
+                </div>
+                <button onclick="toggleModal('login-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 class="text-2xl font-bold text-primary text-center mb-6 brand-font">Sign In</h2>
+                <p class="text-center text-gray-600 mb-6 text-sm">Please sign in with Google to continue.</p>
+                <button onclick="handleGoogleSignIn()" class="w-full bg-white text-gray-700 border border-gray-300 py-3 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-3 shadow-sm">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6"> 
+                    <span class="text-base">Sign in with Google</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+</body>
+</html>
