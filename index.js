@@ -25,7 +25,7 @@ window.currentDetailVariantIndex = 0;
 window.currentDetailImageIndex = 0;   
 window.currentProductImages = [];     
 window.paymentMode = 'online';        
-window.courierMode = 'professional';  
+window.courierMode = 'st_french';  // Default courier mode
 
 window.getWeightInKg = (unitStr) => {
     if (!unitStr) return 0;
@@ -54,7 +54,12 @@ window.calculateDeliveryCharge = (totalWeight, state, paymentMode, courierMode) 
         return weight * 100;
     }
 
-    // --- PROFESSIONAL COURIER LOGIC ---
+    // --- PROFESSIONAL COURIER LOGIC (Fixed ₹50 per KG) ---
+    if (courierMode === 'professional') {
+        return weight * 50;
+    }
+
+    // --- ST & FRENCH COURIER LOGIC (Original Table) ---
     if (paymentMode === 'cod') {
         if (weight <= 1) return 100;
         if (weight <= 2) return 183;
@@ -670,7 +675,22 @@ window.openCartModal = () => {
     const pincodeInput = document.getElementById('checkout-pincode');
     const stateInput = document.getElementById('checkout-state');
 
+    const itemsSection = document.getElementById('cart-items-section');
+    const formSection = document.getElementById('shipping-form-section');
+
     if (user) {
+        // User is logged in - Standard Order (Items first, then form)
+        // Mobile: Items Top (Order 1), Form Bottom (Order 2)
+        // Desktop: Left (Items), Right (Form) - Default HTML structure
+        if(itemsSection) {
+            itemsSection.classList.remove('order-2');
+            itemsSection.classList.add('order-1');
+        }
+        if(formSection) {
+            formSection.classList.remove('order-1');
+            formSection.classList.add('order-2');
+        }
+
         emailInput.value = user.email || '';
         emailInput.readOnly = false; 
         nameInput.value = user.displayName || '';
@@ -685,6 +705,18 @@ window.openCartModal = () => {
                 setTimeout(window.updateCartTotals, 100);
             }
         }
+    } else {
+        // User NOT logged in - "1st time" view
+        // Mobile: Form Top (Order 1), Items Bottom (Order 2)
+        // Desktop: Keep standard (Left/Right) via md:order classes if needed, but flex-col handles mobile
+        if(itemsSection) {
+            itemsSection.classList.remove('order-1');
+            itemsSection.classList.add('order-2');
+        }
+        if(formSection) {
+            formSection.classList.remove('order-2');
+            formSection.classList.add('order-1');
+        }
     }
 };
 
@@ -697,12 +729,12 @@ window.updatePaymentAvailability = () => {
     // Since input is inside label in HTML: <label><input ...> Text</label>
     const codLabel = codInput ? codInput.parentElement : null;
 
-    if (window.courierMode === 'indianpost') {
+    if (window.courierMode === 'indianpost' || window.courierMode === 'professional') {
         // If user is currently on COD, force switch to Online
         if(window.paymentMode === 'cod') {
             window.paymentMode = 'online';
             if(onlineInput) onlineInput.checked = true;
-            window.showToast("COD not available for Indian Post. Switched to Online.", "error");
+            window.showToast("COD not available for this courier. Switched to Online.", "error");
         }
         
         // Disable COD Input
@@ -711,7 +743,7 @@ window.updatePaymentAvailability = () => {
         // Add visual cues for disabled state
         if(codLabel) {
             codLabel.classList.add('opacity-50', 'cursor-not-allowed');
-            codLabel.title = "Not available for Indian Post";
+            codLabel.title = "Not available for this courier";
         }
     } else {
         // Enable COD Input
@@ -723,18 +755,33 @@ window.updatePaymentAvailability = () => {
             codLabel.title = "";
         }
     }
+
+    // Toggle info box visibility based on payment mode
+    const infoBox = document.getElementById('online-payment-info');
+    if(infoBox) {
+        if(window.paymentMode === 'online') infoBox.classList.remove('hidden');
+        else infoBox.classList.add('hidden');
+    }
 };
 
 window.togglePaymentMode = (mode) => {
-    // Prevent selecting COD if Indian Post is active (redundant check if disabled properly, but safe)
-    if(mode === 'cod' && window.courierMode === 'indianpost') {
-        window.showToast("COD is not available for Indian Post", "error");
+    // Prevent selecting COD if restricted couriers are active
+    if(mode === 'cod' && (window.courierMode === 'indianpost' || window.courierMode === 'professional')) {
+        window.showToast("COD is not available for this courier", "error");
         // Revert UI to online
         document.getElementById('pay-mode-online').checked = true;
         window.paymentMode = 'online';
         return;
     }
     window.paymentMode = mode;
+    
+    // Update UI visibility
+    const infoBox = document.getElementById('online-payment-info');
+    if(infoBox) {
+        if(mode === 'online') infoBox.classList.remove('hidden');
+        else infoBox.classList.add('hidden');
+    }
+
     window.updateCartTotals();
 };
 
