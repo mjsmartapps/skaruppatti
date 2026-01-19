@@ -463,28 +463,57 @@ window.renderOrders = () => {
 
         filteredOrders.forEach(order => {
             const date = new Date(order.orderDate).toLocaleDateString() + ' ' + new Date(order.orderDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Items formatting for Display
             const itemsList = (order.items || []).map(i => `
                 <div class="flex justify-between items-start text-xs text-gray-600 border-b border-gray-100 last:border-0 pb-1 mb-1">
                     <span class="break-words w-2/3">${i.name} <span class="text-gray-400">(${i.unit || ''})</span> x ${i.qty}</span>
                     <span class="font-bold text-gray-800">₹${i.subtotal}</span>
                 </div>
             `).join('');
+
+            // Items formatting for WhatsApp Message
+            let itemsMsg = "";
+            (order.items || []).forEach(i => {
+                itemsMsg += `- ${i.name} (${i.unit || ''}) x ${i.qty}: ₹${i.subtotal}\n`;
+            });
             
             let courierName = 'Standard';
             if(order.courierMode === 'st_french') courierName = 'ST & French';
             else if(order.courierMode === 'indianpost') courierName = 'Indian Post';
             else if(order.courierMode === 'professional') courierName = 'Professional';
 
-            // Payment Mode Tag
             let paymentTag = '';
-            if(order.paymentMode === 'cod') paymentTag = '<span class="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded ml-2">COD</span>';
-            else paymentTag = '<span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded ml-2">Online</span>';
+            let paymentText = '';
+            if(order.paymentMode === 'cod') {
+                paymentTag = '<span class="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded ml-2">COD</span>';
+                paymentText = 'Cash on Delivery';
+            } else {
+                paymentTag = '<span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded ml-2">Online</span>';
+                paymentText = 'Online Payment';
+            }
+
+            // Construct WhatsApp Message
+            let whatsappText = `*Order Details - S Karuppatti Store*\n\n` +
+                               `*Date:* ${date}\n` +
+                               `*Order ID:* ${order.id}\n` +
+                               `*Name:* ${order.customerName}\n` +
+                               `*Address:* ${order.address}, ${order.state || ''} - ${order.pincode || ''}\n` +
+                               `*Email:* ${order.email}\n` +
+                               `*Courier:* ${courierName}\n` +
+                               `*Payment Mode:* ${paymentText}\n\n` +
+                               `*Items:*\n${itemsMsg}\n` +
+                               `*Total Amount:* ${order.totalAmount}\n\n` +
+                               `Please send your payment screenshot or proof.`;
+            
+            let encodedMsg = encodeURIComponent(whatsappText);
+            let waLink = `https://wa.me/91${order.customerPhone}?text=${encodedMsg}`;
 
             ordersContainer.innerHTML += `
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col hover:shadow-md transition duration-200">
                     <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                         <div class="flex flex-col">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Order ID</span>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Order ID (Firebase)</span>
                             <span class="text-xs font-mono font-bold text-primary select-all cursor-pointer" title="Click to select" onclick="navigator.clipboard.writeText('${order.id}'); window.showToast('ID Copied')">${order.id}</span>
                         </div>
                         <div class="text-right">
@@ -540,7 +569,7 @@ window.renderOrders = () => {
                                 <option value="Cancelled" ${order.status==='Cancelled'?'selected':''}>Cancelled</option>
                             </select>
                         </div>
-                        <a href="https://wa.me/91${order.customerPhone}" target="_blank" class="w-9 h-9 rounded-lg bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition shadow-sm" title="WhatsApp">
+                        <a href="${waLink}" target="_blank" class="w-9 h-9 rounded-lg bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition shadow-sm" title="WhatsApp">
                             <i class="fa-brands fa-whatsapp"></i>
                         </a>
                         <a href="tel:${order.customerPhone}" class="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center hover:bg-yellow-600 transition shadow-sm" title="Call">
