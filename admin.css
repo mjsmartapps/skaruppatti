@@ -1,0 +1,74 @@
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #fffbeb; 
+}
+.brand-font { 
+    font-family: 'Playfair Display', serif; 
+}
+.tamil-font { 
+    font-family: 'Mukta Malar', sans-serif; 
+}
+
+/* Table Styles */
+.table-row-hover:hover { 
+    background-color: #fef3c7; 
+}
+
+/* Toast Notification */
+#toast-container {
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 5000;
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+}
+.toast {
+    background: white; 
+    border-left: 4px solid #3f2305; 
+    padding: 16px;
+    border-radius: 4px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    min-width: 250px; 
+    animation: slideIn 0.3s ease; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+}
+@keyframes slideIn { 
+    from { transform: translateX(100%); opacity: 0; } 
+    to { transform: translateX(0); opacity: 1; } 
+}
+
+/* Loader */
+.spinner {
+    width: 40px; 
+    height: 40px; 
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3f2305; 
+    border-radius: 50%; 
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+.hide-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* Image Upload Styles */
+.image-slot {
+    transition: all 0.2s;
+}
+.image-slot:hover {
+    border-color: #d97706;
+    background-color: #fff7ed;
+}
+
+/* Mobile Drawer State */
+.mobile-open {
+    transform: translateX(0) !important;
+}

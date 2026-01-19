@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - S Karuppatti Store</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&family=Mukta+Malar:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="admin.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3f2305', // Deep Jaggery Brown
+                        secondary: '#d97706', // Warm Amber/Copper
+                        accent: '#fffbeb', // Cream/Beige
+                        danger: '#ef4444',
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        tamil: ['"Mukta Malar"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden text-gray-800">
+
+    <div id="auth-overlay" class="fixed inset-0 z-50 bg-primary flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full border border-secondary">
+            <h1 class="text-3xl font-bold brand-font text-primary mb-2">Admin Panel</h1>
+            <p class="text-gray-500 mb-6">S Karuppatti Store Management</p>
+
+            <form onsubmit="handleEmailLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                    <input type="email" id="login-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-secondary outline-none transition" placeholder="admin@skaruppatti.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                    <input type="password" id="login-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-secondary outline-none transition" placeholder="••••••••">
+                </div>
+                <button type="submit" id="email-login-btn" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold hover:bg-emerald-900 transition shadow-md border border-primary hover:border-white">
+                    Login as Admin
+                </button>
+            </form>
+            <p class="text-xs text-gray-400 mt-6">Restricted Access.</p>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="mobile-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <aside id="mobile-menu" class="w-64 bg-white shadow-xl flex flex-col z-30 fixed md:relative h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-gray-200 pt-16 md:pt-0">
+        <div class="h-16 flex items-center justify-center border-b border-gray-200 bg-primary text-white hidden md:flex">
+            <h2 class="text-xl font-bold brand-font text-secondary">S Karuppatti Admin</h2>
+        </div>
+        
+        <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 bg-primary text-white md:hidden absolute top-0 left-0 w-full">
+            <span class="font-bold brand-font text-secondary">Menu</span>
+            <button onclick="toggleMobileMenu()" class="text-white hover:text-red-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li><button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-6 py-3 text-primary bg-accent border-r-4 border-primary transition font-medium"><i class="fa-solid fa-chart-line w-6"></i> Dashboard</button></li>
+                <li><button onclick="switchTab('products')" id="nav-products" class="w-full flex items-center gap-3 px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary transition font-medium"><i class="fa-solid fa-box w-6"></i> Products</button></li>
+                <li><button onclick="switchTab('orders')" id="nav-orders" class="w-full flex items-center gap-3 px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary transition font-medium"><i class="fa-solid fa-cart-shopping w-6"></i> Orders</button></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200">
+            <div class="flex items-center gap-3 mb-4">
+                <img id="admin-avatar" src="" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=3f2305&color=fff'" class="w-10 h-10 rounded-full bg-gray-200 object-cover border border-secondary">
+                <div class="overflow-hidden">
+                    <p id="admin-name" class="text-sm font-bold text-gray-800 truncate">Admin</p>
+                    <p class="text-xs text-gray-500">Administrator</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full text-red-500 bg-red-50 py-2 rounded-lg text-sm font-bold hover:bg-red-100 transition border border-red-100"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</button>
+        </div>
+    </aside>
+
+    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-primary z-20 flex items-center justify-between px-4 text-white shadow-md">
+        <span class="font-bold brand-font text-secondary">S Karuppatti Admin</span>
+        <button onclick="toggleMobileMenu()" class="text-xl p-2"><i class="fa-solid fa-bars"></i></button>
+    </div>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden pt-16 md:pt-0">
+        
+        <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 md:p-10">
+            <h2 class="text-2xl font-bold text-primary mb-6 brand-font">Dashboard Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Total Revenue</p>
+                    <h3 class="text-2xl font-bold text-primary mt-1" id="stat-revenue">₹0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Total Orders</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1" id="stat-orders">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Products</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1" id="stat-products">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Pending</p>
+                    <h3 class="text-2xl font-bold text-orange-600 mt-1" id="stat-pending">0</h3>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800">Recent Orders</h3>
+                    <button onclick="switchTab('orders')" class="text-sm text-secondary font-bold hover:underline">View All</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">Order ID</th>
+                                <th class="px-6 py-3 font-semibold">Customer</th>
+                                <th class="px-6 py-3 font-semibold">Amount</th>
+                                <th class="px-6 py-3 font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-orders-table" class="text-sm divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-products" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            <div class="p-6 md:px-10 md:pt-10 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-primary brand-font">Product Management</h2>
+                <button onclick="openProductModal()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-emerald-900 transition">
+                    <i class="fa-solid fa-plus mr-2"></i> Add Product
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto px-6 md:px-10 pb-10">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="products-grid"></div>
+            </div>
+        </div>
+
+        <div id="view-orders" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            <div class="p-6 md:px-10 md:pt-10">
+                <h2 class="text-2xl font-bold text-primary brand-font mb-4">Customer Orders</h2>
+                
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="order-search" oninput="renderOrders()" placeholder="Search Name, Email or Phone..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary text-sm shadow-sm transition">
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="date" id="order-date-filter" onchange="renderOrders()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary text-sm bg-white shadow-sm transition text-gray-600">
+                        <button onclick="clearOrderFilters()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200 transition shadow-sm border border-gray-200">
+                            <i class="fa-solid fa-filter-circle-xmark mr-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 overflow-auto px-6 md:px-10 pb-10">
+                <div id="orders-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="product-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeProductModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto border-t-4 border-primary">
+                <button onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                
+                <h2 class="text-xl font-bold text-primary mb-6 brand-font" id="modal-title">Add New Product</h2>
+                
+                <form onsubmit="handleProductSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="prod-id">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Product English Name</label>
+                            <input type="text" id="prod-name-english" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-secondary outline-none" placeholder="e.g. Palm Jaggery">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Product Tamil Name</label>
+                            <input type="text" id="prod-name-tamil" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-secondary outline-none tamil-font" placeholder="e.g. கருப்பட்டி">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
+                        <select id="prod-category" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-secondary outline-none bg-white">
+                            <option>Karuppatti / Jaggery</option>
+                            <option>Dry Fruits</option>
+                            <option>Millets</option>
+                            <option>Spices</option>
+                            <option>Oil / Ghee</option>
+                            <option>Traditional Sweets</option>
+                            <option>Combo</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Product Variants (Units & Prices)</label>
+                        
+                        <div id="variants-container" class="space-y-3 mb-3">
+                            </div>
+
+                        <button type="button" onclick="addVariantRow()" class="text-xs bg-white text-primary px-3 py-2 rounded shadow hover:bg-gray-100 transition font-bold border border-primary">
+                            <i class="fa-solid fa-plus mr-1"></i> Add Variant
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Product Images (Max 5)</label>
+                        <p class="text-[10px] text-gray-400 mb-2">Upload a file OR paste a direct URL. Image 1 is the main image.</p>
+                        
+                        <div class="space-y-2" id="image-inputs-container">
+                            </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                        <textarea id="prod-desc" rows="3" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-secondary outline-none"></textarea>
+                    </div>
+
+                    <div id="upload-loader" class="hidden flex items-center justify-center text-secondary text-sm font-bold animate-pulse my-2">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Uploading Images...
+                    </div>
+
+                    <button type="submit" id="save-product-btn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-emerald-900 transition mt-2">
+                        Save Product
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmation-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm p-4">
+            <div class="bg-white rounded-xl shadow-2xl p-6 text-center transform transition-all scale-100">
+                <div class="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto mb-4 text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Are you sure?</h3>
+                <p class="text-gray-500 text-sm mb-6" id="confirmation-text">This action cannot be undone.</p>
+                <div class="flex gap-3 justify-center">
+                    <button onclick="closeConfirmationModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    <button onclick="executeConfirmAction()" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition shadow-md">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
