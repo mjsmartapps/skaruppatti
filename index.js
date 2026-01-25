@@ -199,7 +199,7 @@ window.injectDynamicModals = () => {
         // Check if link already exists to avoid duplicates
         if(!quickLinks.innerHTML.includes('toggleModal(\'payment-modal\'')) {
              const li = document.createElement('li');
-             li.innerHTML = `<a href="#" onclick="toggleModal('payment-modal', true)" class="hover:text-secondary transition"></a>`;
+             li.innerHTML = `<a href="#" onclick="toggleModal('payment-modal', true)" class="hover:text-secondary transition">Payment & Order Instructions</a>`;
              quickLinks.appendChild(li);
         }
     }
@@ -227,9 +227,19 @@ window.calculateDeliveryCharge = (totalWeight, state, paymentMode, courierMode) 
     const weight = Math.ceil(totalWeight);
     if (weight <= 0) return 0;
 
-    // --- INDIAN POST LOGIC (Fixed ₹100 per KG) ---
+    // --- INDIAN POST LOGIC (Updated Table) ---
     if (courierMode === 'indianpost') {
-        return weight * 100;
+        if (weight <= 1) return 60;
+        if (weight <= 2) return 95;
+        if (weight <= 3) return 120;
+        if (weight <= 4) return 150;
+        if (weight <= 5) return 195;
+        if (weight <= 6) return 240;
+        if (weight <= 7) return 275;
+        if (weight <= 8) return 305;
+        if (weight <= 9) return 335;
+        if (weight <= 10) return 370;
+        return 370 + ((weight - 10) * 40); // Estimation for > 10KG
     }
 
     // --- PROFESSIONAL COURIER LOGIC (Fixed ₹50 per KG) ---
@@ -1542,7 +1552,7 @@ window.injectDynamicModals = () => {
         // Check if link already exists to avoid duplicates
         if(!quickLinks.innerHTML.includes('toggleModal(\'payment-modal\'')) {
              const li = document.createElement('li');
-             li.innerHTML = `<a href="#" onclick="toggleModal('payment-modal', true)" class="hover:text-secondary transition"></a>`;
+             li.innerHTML = `<a href="#" onclick="toggleModal('payment-modal', true)" class="hover:text-secondary transition">Payment & Order Instructions</a>`;
              quickLinks.appendChild(li);
         }
     }
