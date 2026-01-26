@@ -199,7 +199,7 @@ window.injectDynamicModals = () => {
         // Check if link already exists to avoid duplicates
         if(!quickLinks.innerHTML.includes('toggleModal(\'payment-modal\'')) {
              const li = document.createElement('li');
-             li.innerHTML = `<a href="#" onclick="toggleModal('payment-modal', true)" class="hover:text-secondary transition">Payment & Order Instructions</a>`;
+             li.innerHTML = `<a href="#" onclick="toggleModal('payment-modal', true)" class="hover:text-secondary transition"></a>`;
              quickLinks.appendChild(li);
         }
     }
@@ -1565,3 +1565,4 @@ window.addEventListener('load', () => {
         window.injectDynamicModals(); // NEW CALL
     });
 });
+
